@@ -126,9 +126,7 @@ export function useItemList({
   useEffect(() => {
     function handleSelect(selectedIndex) {
       const item = items.current[selectedIndex]
-      if (onSelect && item) {
-        onSelect(item, selectedIndex)
-      }
+      onSelect(item || {}, selectedIndex)
     }
     itemListEmitter.on('SELECT_ITEM', handleSelect)
     return () => {
