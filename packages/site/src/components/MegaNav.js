@@ -10,6 +10,7 @@ function MenuItem({ children }) {
   const { id, highlight, select, useHighlighted } = useItem({
     ref,
     value: children,
+    initialHighlightedIndex: 0,
   })
   const highlighted = useHighlighted()
   return (
@@ -17,7 +18,9 @@ function MenuItem({ children }) {
       ref={ref}
       id={id}
       onClick={select}
+      onFocus={highlight}
       onMouseOver={highlight}
+      onBlur={clearHighlightedItem}
       onMouseOut={clearHighlightedItem}
       style={{
         display: 'flex',
@@ -99,6 +102,7 @@ function MenuGroup({ title, children }) {
             }
           }
           if (event.key === 'ArrowUp') {
+            event.preventDefault()
             const item = menuGroup.getHighlightedItem()
             if (item) {
               const highlightedIndex = item.value.getHighlightedIndex()
@@ -117,6 +121,7 @@ function MenuGroup({ title, children }) {
             }
           }
           if (event.key === 'ArrowDown') {
+            event.preventDefault()
             const item = menuGroup.getHighlightedItem()
             if (item) {
               const lastIndex = item.value.items.current.length - 1

@@ -83,6 +83,7 @@ function Option({ children, value }) {
   const { id, index, highlight, select, useHighlighted } = useItem({
     ref,
     value,
+    text: children,
   })
   const highlighted = useHighlighted()
   return (
@@ -92,7 +93,9 @@ function Option({ children, value }) {
       role="option"
       aria-selected={highlighted}
       onMouseOver={highlight}
+      onFocus={highlight}
       onMouseOut={clearHighlightedItem}
+      onBlur={clearHighlightedItem}
       onMouseDown={select}
       style={{
         display: 'flex',
@@ -112,7 +115,7 @@ export function Demo() {
       !inputValue || item.name.toLowerCase().includes(inputValue.toLowerCase())
   )
   return (
-    <Combobox onSelect={(value) => setInputValue(value.name)}>
+    <Combobox onSelect={(item) => setInputValue(item.value.name)}>
       <div>
         <Input
           value={inputValue}
@@ -125,7 +128,8 @@ export function Demo() {
                   {item.name}
                 </Option>
               ))
-            : 'No results found'}
+            : 'No results found'
+          }
         </List>
       </div>
     </Combobox>

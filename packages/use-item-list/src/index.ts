@@ -73,7 +73,7 @@ export type ItemListOptions = {
 
 export function useItemList({
   id = localId++,
-  initialHighlightedIndex = 0,
+  initialHighlightedIndex = null,
   onHighlight,
   onSelect,
   selected = null,
@@ -84,6 +84,7 @@ export function useItemList({
   const itemListEmitter = useConstant(() => mitt())
   const itemListForceUpdate = useForceUpdate()
   const highlightedIndex = useRef<number>(initialHighlightedIndex)
+  const [selectedItem, setSelectedItem] = useState<ItemOptions | {}>({})
   const items = useRef([])
   const shouldCollectItems = useRef(true)
   const invalidatedItems = useRef(false)
@@ -267,6 +268,7 @@ export function useItemList({
       const itemForceUpdate = useForceUpdate()
       const itemIndex = storeItem({ ref, text, value, disabled })
       const itemIndexRef = useRef<number>(itemIndex)
+      const selected = isItemSelected(value)
 
       function highlight() {
         if (disabled === false) {
@@ -296,6 +298,18 @@ export function useItemList({
         }
         itemEmitter.emit('UPDATE_ITEM_INDEX', itemIndex)
       }, [itemIndex])
+
+      useEffect(() => {
+        if (selected) {
+          setSelectedItem({ ref, text, value, disabled })
+        }
+      }, [selected, ref, text, value, disabled])
+
+      useEffect(() => {
+        if (selected && highlightedIndex.current === null) {
+          highlight()
+        }
+      }, [selected])
 
       useEffect(() => {
         function handleHighlight(newIndex) {
@@ -347,7 +361,7 @@ export function useItemList({
         index: itemIndexRef.current,
         highlight,
         select,
-        selected: isItemSelected(value),
+        selected,
         useHighlighted,
       }
     },
@@ -366,6 +380,7 @@ export function useItemList({
     selectHighlightedItem,
     useHighlightedItemId,
     highlightItemByString,
+    selectedItem,
     useItem,
   }
 }

@@ -11,19 +11,59 @@ import { useItemList } from 'use-item-list'
 const SelectContext = createContext(null)
 
 export function Select({ children, value, onChange }) {
+  const buttonRef = useRef()
+  const listRef = useRef()
+  const [isOpen, setIsOpen] = useState(false)
+
+  function open() {
+    setIsOpen(true)
+    setTimeout(() => {
+      listRef.current.focus()
+    }, 0)
+  }
+
+  function close() {
+    setIsOpen(false)
+    buttonRef.current.focus()
+  }
+
   const itemList = useItemList({
     selected: value,
-    onSelect: onChange,
+    onSelect: (item) => {
+      onChange(item)
+      close()
+    },
   })
-  const itemId = itemList.useHighlightedItemId()
+
+  const {selectedItem, useHighlightedItemId} = itemList
+  const itemId = useHighlightedItemId()
+
   return (
     <SelectContext.Provider value={itemList}>
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        ref={buttonRef}
+        aria-expanded={isOpen}
+				aria-controls={itemList.listId}
+        onClick={isOpen ? close : open}
+      >
+        {selectedItem.text || 'Select fruit'} ▼
+      </button>
       <ul
+        ref={listRef}
         id={itemList.listId}
         tabIndex={0}
         role="listbox"
         aria-activedescendant={itemId}
-        style={{ padding: 0 }}
+        style={{
+          margin: '2px 0 0 0',
+          padding: '5px 0',
+          display: !isOpen && 'none',
+          border: '1px solid grey',
+          borderRadius: 5,
+          outlineOffset: 3,
+        }}
         onKeyDown={(event) => {
           if (event.key === 'ArrowUp') {
             event.preventDefault()
@@ -47,25 +87,25 @@ export function Select({ children, value, onChange }) {
 }
 
 export function Option({ children, text, value, disabled }) {
-  const { useItem, clearHighlightedItem } = useContext(SelectContext)
+  const { useItem } = useContext(SelectContext)
   const ref = useRef()
   const { id, index, highlight, select, selected, useHighlighted } = useItem({
     ref,
-    text,
+    text: text || children,
     value,
     disabled,
   })
   const highlighted = useHighlighted()
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events
     <li
       ref={ref}
       id={id}
       role="option"
       aria-selected={selected}
       aria-disabled={disabled}
-      onMouseOver={highlight}
-      onMouseOut={clearHighlightedItem}
-      onMouseDown={select}
+      onMouseEnter={highlight}
+      onClick={select}
       style={{
         display: 'flex',
         padding: 8,
@@ -85,30 +125,20 @@ const staticObjectValue = { foo: 'bar' }
 
 export function Demo() {
   const [fruits, setFruits] = useState(assortedFruits.slice(1, 4))
-  const [selectedFruits, setSelectedFruits] = useState([])
+  const [selectedFruit, setSelectedFruit] = useState(assortedFruits[3])
   return (
     <div>
       <button onClick={() => setFruits(assortedFruits)}>Add more fruits</button>
+      <br />
       <Select
-        value={(value) => selectedFruits.includes(value)}
-        onChange={(value) => {
-          setSelectedFruits((currentSelectedFruits) => {
-            const nextSelectedFruits = [...currentSelectedFruits]
-            const index = currentSelectedFruits.indexOf(value)
-            if (index > -1) {
-              nextSelectedFruits.splice(index, 1)
-            } else {
-              nextSelectedFruits.push(value)
-            }
-            return nextSelectedFruits
-          })
-        }}
+        value={selectedFruit}
+        onChange={(item) => setSelectedFruit(item.value)}
       >
         {fruits.map((fruit) => (
           <Option
             key={fruit}
             value={fruit}
-            disabled={['Pear', 'Kiwi'].includes(fruit)}
+            disabled={['Pear', 'Banana'].includes(fruit)}
           >
             {fruit}
           </Option>
